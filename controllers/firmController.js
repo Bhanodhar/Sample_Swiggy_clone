@@ -1,6 +1,8 @@
 const Vendor = require('../models/Vendor');
 const Firm = require('../models/Firm');
+const Product = require('../models/Product'); // You need this for deleting products
 const multer = require('multer');
+const path = require('path');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -8,38 +10,24 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/'); // Save uploaded files in 'uploads' folder
     },
     filename: function (req, file, cb) {
-        cb(null,Date.now() + path.extname(file.originalname));
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
-
 const upload = multer({ storage: storage });
-
 
 // Add a new firm linked to a vendor
 const addFirm = async (req, res) => {
     try {
         const { firmname, area, category, region, offer } = req.body;
+        const image = req.file ? req.file.filename : undefined;
+        const vendorId = req.vendorId;
 
-        const image = req.file?req.file.filename : undefined
-
-
-        const vendorId = req.vendorId; // This should be set by verifyToken middleware
-
-        // Check if vendor exists
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) {
             return res.status(404).json({ message: "Vendor not found." });
         }
 
-        // // Check if file is uploaded
-        // if (!req.file) {
-        //     return res.status(400).json({ message: "Please upload an image file." });
-        // }
-
-        // const image = req.file.path; // Path to the uploaded image
-
-        // Create a new firm
         const newFirm = new Firm({
             firmname,
             area,
@@ -50,16 +38,14 @@ const addFirm = async (req, res) => {
             vendor: vendor._id
         });
 
-        // Save firm to database
         const savedFirm = await newFirm.save();
-        vendor.firm.push(savedFirm)
-        await vendor.save()
 
-        // Optionally, link firm to vendor (if needed, uncomment below)
-        // vendor.firm = newFirm._id;
-        // await vendor.save();
+        if (!vendor.firm) {
+            vendor.firm = savedFirm._id;
+        }
+        await vendor.save();
 
-        res.status(201).json({ message: "Firm added successfully.", firm: newFirm });
+        res.status(201).json({ message: "Firm added successfully.", firm: savedFirm });
 
     } catch (error) {
         console.error("Error in adding firm:", error);
@@ -67,32 +53,23 @@ const addFirm = async (req, res) => {
     }
 };
 
-
-
 // Delete a firm by ID
 const deleteFirm = async (req, res) => {
     try {
         const firmId = req.params.firmId;
-
-        // Find the firm
         const firm = await Firm.findById(firmId);
         if (!firm) {
             return res.status(404).json({ message: "Firm not found." });
         }
 
-        // Remove the firm reference from the associated vendor
         const vendor = await Vendor.findById(firm.vendor);
-        if (vendor) {
-            if (vendor.firm && vendor.firm.toString() === firmId) {
-                vendor.firm = undefined; // Or null depending on your schema
-                await vendor.save();
-            }
+        if (vendor && vendor.firm && vendor.firm.toString() === firmId) {
+            vendor.firm = undefined;
+            await vendor.save();
         }
 
-        // Optionally, delete all products associated with this firm
         await Product.deleteMany({ firm: firmId });
 
-        // Delete the firm itself
         await Firm.findByIdAndDelete(firmId);
 
         res.status(200).json({ message: "Firm and associated products deleted successfully." });
@@ -102,10 +79,8 @@ const deleteFirm = async (req, res) => {
     }
 };
 
-
-
-
 module.exports = {
-    addFirm:[upload.single('image'), addFirm, deleteFirm]
-    // upload // Export multer middleware to use in routes
+    upload,
+    addFirm,
+    deleteFirm
 };

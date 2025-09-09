@@ -18,7 +18,7 @@ router.delete('/delete-product/:productId', productController.deleteProduct);
 // Route to serve images from the uploads folder
 router.get('/uploads/:imageName', (req, res) => {
     const imageName = req.params.imageName;
-    res.headersSent('Content-Type','image/jpeg');
+    res.set('Content-Type', 'image/jpeg');
     const imagePath = path.join(__dirname, '../uploads', imageName);
 
     res.sendFile(imagePath, err => {
