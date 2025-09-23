@@ -12,7 +12,7 @@ router.post('/add-product/:firmId', productController.addProduct);
 router.get('/:firmId/products', productController.getProductsByFirm);
 
 // Delete product by ID
-router.delete('/delete-product/:productId', productController.deleteProduct);
+router.delete('/:productId', productController.deleteProduct);
 
 
 // Route to serve images from the uploads folder

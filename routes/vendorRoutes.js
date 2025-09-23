@@ -11,6 +11,6 @@ router.post('/login', vendorLogin);
 router.get('/all-vendors', getAllVendors);
 
 // Route to get a single vendor by ID
-router.get('/single-vendor/:Id', getVendorById);
+router.get('/single-vendor/:id', getVendorById);
 
 module.exports = router;

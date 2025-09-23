@@ -76,9 +76,11 @@ const vendorLogin = async (req, res) => {
             { expiresIn: '1h' }
         );
 
+        const vendorId = vendor._id;
+        
 
         // Send success response (You can later add token generation here)
-        res.status(200).json({ message: "Login successful.", token });
+        res.status(200).json({ message: "Login successful.", token, vendorId });
         console.log(email)
     } catch (error) {
         console.error("Error in vendor login:", error);
@@ -101,15 +103,15 @@ const getAllVendors = async (req, res) => {
 
 // Get single vendor by ID
 const getVendorById = async (req, res) => {
-    const vendorId = req.params.Id;
+    const vendorId = req.params.id;
     try {
         const vendor = await Vendor.findById(vendorId).populate('firm');
 
         if (!vendor) {
             return res.status(404).json({ message: "Vendor not found." });
         }
-
-        res.status(200).json({ vendor });
+        const vendorFirmId = vendor.firm[0]._id;
+        res.status(200).json({ vendorId,vendorFirmId, vendor });
     } catch (error) {
         console.error("Error fetching vendor:", error);
         res.status(500).json({ message: "Server error." });
