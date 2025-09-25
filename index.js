@@ -17,8 +17,9 @@ const PORT =process.env.PORT || 3000;
 dotEnv.config()
 
 app.use(cors({
-  origin: "http://localhost:5173",  // Vite default frontend URL
-  credentials: true
+  origin: ["http://localhost:5173", "https://vendor-dashboard-frontend-five.vercel.app"], // allow your frontend
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true // if you’re sending cookies or auth headers
 }));
 
 app.use(bodyParser.json()); 
